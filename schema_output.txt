@@ -1,0 +1,227 @@
+================================================================================
+ OUTPUT FOR schema_design.sql - Financial Transaction Tracking System
+================================================================================
+
+This file shows the expected output after executing the SQL schema script.
+- Database: MySQL 8.0+ (tested on localhost).
+- Execution Date: [Simulated; replace with your run time, e.g., 2023-10-15].
+- Steps:
+  1. Run the full schema_design.sql (creates tables, triggers, views, procedures, and inserts sample data).
+  2. Run demo queries/procedures as shown below.
+- Note: Outputs may vary slightly due to timestamps or auto-increment values.
+
+--------------------------------------------------------------------------------
+1. TABLE STRUCTURES (Summary via DESCRIBE TABLE)
+--------------------------------------------------------------------------------
+
+-- Users Table
+DESCRIBE Users;
++---------------+--------------+------+-----+-------------------+-----------------------------+
+| Field         | Type         | Null | Key | Default           | Extra                       |
++---------------+--------------+------+-----+-------------------+-----------------------------+
+| user_id       | int          | NO   | PRI | NULL              | auto_increment              |
+| username      | varchar(50)  | NO   | UNI | NULL              |                             |
+| password_hash | varchar(255) | NO   |     | NULL              |                             |
+| role          | varchar(20)  | NO   |     | NULL              |                             |
+| created_at    | timestamp    | YES  |     | CURRENT_TIMESTAMP |                             |
++---------------+--------------+------+-----+-------------------+-----------------------------+
+
+-- Customers Table
+DESCRIBE Customers;
++----------------+--------------+------+-----+---------+---------------------+
+| Field          | Type         | Null | Key | Default | Extra               |
++----------------+--------------+------+-----+---------+---------------------+
+| customer_id    | int          | NO   | PRI | NULL    | auto_increment      |
+| first_name     | varchar(50)  | NO   |     | NULL    |                     |
+| last_name      | varchar(50)  | NO   |     | NULL    |                     |
+| email          | varchar(100) | NO   | UNI | NULL    |                     |
+| phone          | varchar(20)  | YES  |     | NULL    |                     |
+| address        | text         | YES  |     | NULL    |                     |
+| date_of_birth  | date         | YES  |     | NULL    |                     |
+| created_at     | timestamp    | YES  |     | CURRENT_TIMESTAMP |                |
+| updated_at     | timestamp    | YES  |     | CURRENT_TIMESTAMP | on update CURRENT_TIMESTAMP |
++----------------+--------------+------+-----+---------+---------------------+
+
+-- Accounts Table
+DESCRIBE Accounts;
++----------------+---------------+------+-----+---------+---------------------+
+| Field          | Type          | Null | Key | Default | Extra               |
++----------------+---------------+------+-----+---------+---------------------+
+| account_id     | int           | NO   | PRI | NULL    | auto_increment      |
+| customer_id    | int           | NO   | MUL | NULL    |                     |
+| account_number | varchar(20)   | NO   | UNI | NULL    |                     |
+| account_type   | varchar(20)   | NO   |     | NULL    |                     |
+| balance        | decimal(15,2) | YES  |     | 0.00    |                     |
+| interest_rate  | decimal(5,4)  | YES  |     | 0.0000  |                     |
+| opened_at      | timestamp     | YES  |     | CURRENT_TIMESTAMP |                |
+| status         | varchar(10)   | YES  |     | active  |                     |
++----------------+---------------+------+-----+---------+---------------------+
+
+-- Transactions Table
+DESCRIBE Transactions;
++------------------+---------------+------+-----+---------+---------------------+
+| Field            | Type          | Null | Key | Default | Extra               |
++------------------+---------------+------+-----+---------+---------------------+
+| transaction_id   | int           | NO   | PRI | NULL    | auto_increment      |
+| from_account_id  | int           | YES  | MUL | NULL    |                     |
+| to_account_id    | int           | YES  | MUL | NULL    |                     |
+| account_id       | int           | NO   | MUL | NULL    |                     |
+| transaction_type | varchar(20)   | NO   |     | NULL    |                     |
+| amount           | decimal(15,2) | NO   |     | NULL    |                     |
+| fee              | decimal(15,2) | YES  |     | 0.00    |                     |
+| transaction_date | timestamp     | YES  |     | CURRENT_TIMESTAMP |                |
+| description      | varchar(255)  | YES  |     | NULL    |                     |
+| created_by       | int           | YES  | MUL | NULL    |                     |
++------------------+---------------+------+-----+---------+---------------------+
+
+--------------------------------------------------------------------------------
+2. SAMPLE DATA IN TABLES (After Initial Inserts)
+--------------------------------------------------------------------------------
+
+-- Users (2 rows)
+SELECT * FROM Users;
++---------+----------+-------------------+---------------------+------------+
+| user_id | username | password_hash     | role                | created_at |
++---------+----------+-------------------+---------------------+------------+
+|       1 | admin    | hashed_password_admin | admin            | 2023-10-15 10:00:00 |
+|       2 | teller1  | hashed_password_teller | teller          | 2023-10-15 10:00:00 |
++---------+----------+-------------------+---------------------+------------+
+
+-- Customers (3 rows)
+SELECT * FROM Customers;
++-------------+------------+-------------+--------------------------+-----------+---------------------+------------+---------------------+
+| customer_id | first_name | last_name   | email                    | phone     | address             | date_of_birth | created_at          |
++-------------+------------+-------------+--------------------------+-----------+---------------------+------------+---------------------+
+|           1 | John       | Doe         | john.doe@example.com     | 555-0101  | 123 Main St, Anytown| 1980-05-15  | 2023-10-15 10:00:01 |
+|           2 | Jane       | Smith       | jane.smith@example.com   | 555-0102  | 456 Oak Ave, Anytown| 1990-08-20  | 2023-10-15 10:00:01 |
+|           3 | Bob        | Johnson     | bob.johnson@example.com  | 555-0103  | 789 Pine Rd, Anytown| 1975-12-10  | 2023-10-15 10:00:01 |
++-------------+------------+-------------+--------------------------+-----------+---------------------+------------+---------------------+
+
+-- Accounts (5 rows; initial balances as inserted)
+SELECT * FROM Accounts;
++-------------+-------------+----------------+--------------+----------+---------------+---------------------+----------+
+| account_id  | customer_id | account_number | account_type | balance  | interest_rate | opened_at           | status   |
++-------------+-------------+----------------+--------------+----------+---------------+---------------------+----------+
+|           1 |           1 | ACC001         | checking     | 1500.00  | 0.0000        | 2023-10-15 10:00:02 | active   |
+|           2 |           1 | ACC002         | savings      | 5000.00  | 0.0150        | 2023-10-15 10:00:02 | active   |
+|           3 |           2 | ACC003         | checking     | 2500.00  | 0.0000        | 2023-10-15 10:00:02 | active   |
+|           4 |           2 | ACC004         | credit       | 0.00     | 0.0000        | 2023-10-15 10:00:02 | active   |
+|           5 |           3 | ACC005         | savings      | 3000.00  | 0.0200        | 2023-10-15 10:00:02 | active   |
++-------------+-------------+----------------+--------------+----------+---------------+---------------------+----------+
+
+-- Transactions (4 initial rows; balances updated by triggers)
+-- Note: After inserts, balances are auto-updated (e.g., ACC001: +1000 deposit -200 withdrawal -1000 transfer = 1300; ACC002: +1000 transfer = 6000)
+SELECT * FROM Transactions;
++----------------+---------------+-------------+------------+------------------+--------+-------+---------------------+-----------------------------+------------+
+| transaction_id | from_account_id | to_account_id | account_id | transaction_type | amount | fee   | transaction_date    | description                  | created_by |
++----------------+---------------+-------------+------------+------------------+--------+-------+---------------------+-----------------------------+------------+
+|              1 |          NULL  |           1  |          1 | deposit          | 1000.00| 0.00  | 2023-10-15 10:00:03 | Initial deposit              |          1 |
+|              2 |             1  |        NULL  |          1 | withdrawal       | 200.00 | 1.50  | 2023-10-15 10:00:03 | ATM withdrawal               |          2 |
+|              3 |          NULL  |           3  |          3 | deposit          | 500.00 | 0.00  | 2023-10-15 10:00:03 | Salary deposit               |          2 |
+|              4 |             1  |           2  |          1 | transfer         | 1000.00| 5.00  | 2023-10-15 10:00:03 | Transfer to savings          |          1 |
++----------------+---------------+-------------+------------+------------------+--------+-------+---------------------+-----------------------------+------------+
+
+Updated Balances After Initial Transactions (via SELECT * FROM Accounts):
++-------------+-------------+----------------+--------------+----------+---------------+---------------------+----------+
+| account_id  | customer_id | account_number | account_type | balance  | interest_rate | opened_at           | status   |
++-------------+-------------+----------------+--------------+----------+---------------+---------------------+----------+
+|           1 |           1 | ACC001         | checking     | 1293.50  | 0.0000        | 2023-10-15 10:00:02 | active   |
+|           2 |           1 | ACC002         | savings      | 6000.00  | 0.0150        | 2023-10-15 10:00:02 | active   |
+|           3 |           2 | ACC003         | checking     | 3000.00  | 0.0000        | 2023-10-15 10:00:02 | active   |
+|           4 |           2 | ACC004         | credit       | 0.00     | 0.0000        | 2023-10-15 10:00:02 | active   |
+|           5 |           3 | ACC005         | savings      | 3000.00  | 0.0200        | 2023-10-15 10:00:02 | active   |
++-------------+-------------+----------------+--------------+----------+---------------+---------------------+----------+
+
+--------------------------------------------------------------------------------
+3. VIEW OUTPUTS (Pre-Built Reports)
+--------------------------------------------------------------------------------
+
+-- CustomerAccountSummary View (Customer summaries with transaction counts)
+SELECT * FROM CustomerAccountSummary;
++-------------+----------------+--------------------------------+-------------+----------------+--------------+----------+----------+-------------------+
+| customer_id | customer_name  | email                          | account_id  | account_number | account_type | balance  | status   | total_transactions |
++-------------+----------------+--------------------------------+-------------+----------------+--------------+----------+----------+-------------------+
+|           1 | John Doe       | john.doe@example.com           |           1 | ACC001         | checking     | 1293.50  | active   |                 3 |
+|           1 | John Doe       | john.doe@example.com           |           2 | ACC002         | savings      | 6000.00  | active   |                 1 |
+|           2 | Jane Smith     | jane.smith@example.com         |           3 | ACC003         | checking     | 3000.00  | active   |                 1 |
+|           2 | Jane Smith     | jane.smith@example.com         |           4 | ACC004         | credit       | 0.00     | active   |                 0 |
+|           3 | Bob Johnson    | bob.johnson@example.com        |           5 | ACC005         | savings      | 3000.00  | active   |                 0 |
++-------------+----------------+--------------------------------+-------------+----------------+--------------+----------+----------+-------------------+
+
+-- RecentTransactions View (Last 30 days; all transactions qualify in demo)
+SELECT * FROM RecentTransactions;
++----------------+---------------+----------------+--------------+--------+-------+---------------------+-----------------------------+----------------+
+| transaction_id | account_number| transaction_type | amount      | fee    | total_amount | transaction_date    | description                  | customer_name  |
++----------------+---------------+----------------+--------------+--------+--------------+---------------------+-----------------------------+----------------+
+|              4 | ACC001        | transfer       | 1000.00      | 5.00   | 1005.00      | 2023-10-15 10:00:03 | Transfer to savings          | John Doe       |
+|              3 | ACC003        | deposit        | 500.00       | 0.00   | 500.00       | 2023-10-15 10:00:03 | Salary deposit               | Jane Smith     |
+|              2 | ACC001        | withdrawal     | 200.00       | 1.50   | 201.50       | 2023-10-15 10:00:03 | ATM withdrawal               | John Doe       |
+|              1 | ACC001        | deposit        | 1000.00      | 0.00   | 1000.00      | 2023-10-15 10:00:03 | Initial deposit              | John Doe       |
++----------------+---------------+----------------+--------------+--------+--------------+---------------------+-----------------------------+----------------+
+
+--------------------------------------------------------------------------------
+4. STORED PROCEDURE OUTPUTS (Demo Calls)
+--------------------------------------------------------------------------------
+
+-- Call Deposit (Add $500 to ACC001; user_id=1)
+CALL Deposit(1, 500.00, 0.00, 'Demo deposit', 1);
++---------------------+-----------------+
+| message             | affected_rows   |
++---------------------+-----------------+
+| Deposit successful  |               1 |
++---------------------+-----------------+
+
+-- Updated Balance for ACC001 (now 1793.50)
+SELECT balance FROM Accounts WHERE account_id = 1;
++----------+
+| balance  |
++----------+
+| 1793.50  |
++----------+
+
+-- New Transaction Row (ID=5)
+SELECT * FROM Transactions WHERE transaction_id = 5;
++----------------+---------------+-------------+------------+------------------+--------+-------+---------------------+----------------+------------+
+| transaction_id | from_account_id | to_account_id | account_id | transaction_type | amount | fee   | transaction_date    | description    | created_by |
++----------------+---------------+-------------+------------+------------------+--------+-------+---------------------+----------------+------------+
+|              5 |          NULL  |           1  |          1 | deposit          | 500.00 | 0.00  | 2023-10-15 10:05:00 | Demo deposit   |          1 |
++----------------+---------------+-------------+------------+------------------+--------+-------+---------------------+----------------+------------+
+
+-- Call Withdraw (Withdraw $100 from ACC001; user_id=2)
+CALL Withdraw(1, 100.00, 0.00, 'Demo withdrawal', 2);
++---------------------+-----------------+
+| message             | affected_rows   |
++---------------------+-----------------+
+| Withdrawal successful |             1 |
++---------------------+-----------------+
+
+-- Updated Balance for ACC001 (now 1693.50)
+SELECT balance FROM Accounts WHERE account_id = 1;
++----------+
+| balance  |
++----------+
+| 1693.50  |
++----------+
+
+-- New Transaction Row (ID=6)
+SELECT * FROM Transactions WHERE transaction_id = 6;
++----------------+---------------+-------------+------------+-------------------+--------+-------+---------------------+-------------------+------------+
+| transaction_id | from_account_id | to_account_id | account_id | transaction_type  | amount | fee   | transaction_date    | description       | created_by |
++----------------+---------------+-------------+------------+-------------------+--------+-------+---------------------+-------------------+------------+
+|              6 |             1  |        NULL  |          1 | withdrawal        | 100.00 | 0.00  | 2023-10-15 10:06:00 | Demo withdrawal   |          2 |
++----------------+---------------+-------------+------------+-------------------+--------+-------+---------------------+-------------------+------------+
+
+-- Call Transfer ($200 from ACC001 to ACC003; user_id=1; fee $2)
+CALL Transfer(1, 3, 200.00, 2.00, 'Demo transfer from checking to another checking', 1);
++---------------------+-----------------+
+| message             | affected_rows   |
++---------------------+-----------------+
+| Transfer successful |               1 |
++---------------------+-----------------+
+
+-- Updated Balances (ACC001: 1491.50; ACC003: 3200.00)
+SELECT account_number, balance FROM Accounts WHERE account_id IN (1, 3);
++----------------+----------+
+| account_number | balance  |
++----------------+----------+
+| ACC001         | 1491.50
